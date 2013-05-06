@@ -18,7 +18,7 @@ class imgur(basesite):
 		#   "domain": user.imgur.com
 		#   "account": user.imgur.com/album_name
 		#   "subreddit": imgur.com/r/subreddit
-		self.album_type = None 
+		self.album_type = None
 		if not 'http://imgur.com' in url and not '.imgur.com' in url:
 			raise Exception('')
 		if      '.imgur.com'    in url and \
@@ -48,7 +48,7 @@ class imgur(basesite):
 			if splits[2] not in ['day', 'month', 'year', 'all']:
 				raise Exception('Unexpected imgur subreddit sort time: %s' % splits[2])
 			return 'http://imgur.com/r/%s/%s/%s' % (splits[0], splits[1], splits[2])
-			
+
 		elif not '/a/' in url:
 			raise Exception("Not a valid imgur album")
 		else:
@@ -68,21 +68,21 @@ class imgur(basesite):
 			self.album_type = 'subreddit'
 			trail = u[u.find('imgur.com/r/')+len('imgur.com/r/'):]
 			return 'imgur_r_%s' % trail.replace('/', '_')
-		
+
 		elif '/a/' in u:
 			# Album
 			self.album_type = 'direct'
 			aid = u[u.find('/a/')+len('/a/'):]
 			if '/' in aid: aid = aid[:aid.find('/')]
 			return 'imgur_%s' % aid
-			
+
 		elif u.replace('/', '').endswith('imgur.com'):
 			# Domain-level full account URL (Multiple albums)
 			self.album_type = 'account'
 			user = u[u.find('//')+2:]
 			user = user[:user.find('.')]
 			return 'imgur_%s' % user
-			
+
 		else:
 			# Domain-level album
 			self.album_type = 'domain'
@@ -105,7 +105,7 @@ class imgur(basesite):
 		else:
 			# Account-level album
 			self.download_account(self.url)
-	
+
 	def text_to_fs_safe(self, text):
 		safe = 'abcdefghijklmnopqrstuvwxyz0123456789-_ &'
 		text = text.replace('&amp;', '&')
@@ -114,7 +114,7 @@ class imgur(basesite):
 			if text[c].lower() in safe:
 				result += text[c]
 		return result
-	
+
 	def download_account(self, album):
 		r = self.web.get(album)
 		covers = self.web.between(r, '<div class="cover">', '</div>')
@@ -124,7 +124,7 @@ class imgur(basesite):
 			alts = self.web.between(cover, 'alt="', '"')
 			if len(alts) > 0:
 				alt = alts[0].replace('"', '').replace('/', '').replace('\\', '')
-			else: 
+			else:
 				alt = 'untitled'
 			alt = self.text_to_fs_safe(alt)
 			prev_dir = self.working_dir
@@ -148,15 +148,17 @@ class imgur(basesite):
 			link = self.get_highest_res('http://i.%s' % link)
 			# Download every image
 			# Uses superclass threaded download method
+			self.download_image(link, index + 1, total=len(links))
+			if self.hit_image_limit(): break
 			if self.urls_only:
 				self.add_url(index + 1, link, total=len(links))
 			else:
-				self.download_image(link, index + 1, total=len(links)) 
+				self.download_image(link, index + 1, total=len(links))
 				if self.hit_image_limit(): break
 		self.wait_for_threads()
-		
+
 	def download_subreddit(self, album):
-		self.max_images = 500
+		self.max_images = 1000
 		index = 0
 		total = 0
 		page  = 0
@@ -187,12 +189,12 @@ class imgur(basesite):
 				if self.urls_only:
 					self.add_url(index, link, total=total)
 				else:
-					self.download_image(link, index, total=total) 
+					self.download_image(link, index, total=total)
 					if self.hit_image_limit(): break
 			if self.hit_image_limit(): break
 			page += 1
 		self.wait_for_threads()
-	
+
 	def get_filetype(self, url):
 		m = self.web.get_meta(url)
 		if 'Content-Type' in m:
@@ -201,7 +203,7 @@ class imgur(basesite):
 			if ext.lower() == 'jpeg': ext = 'jpg'
 			return ext
 		return 'jpg'
-	
+
 	""" Returns highest-res image by checking if imgur has higher res """
 	def get_highest_res(self, url):
 		if not 'h.' in url:
@@ -212,4 +214,3 @@ class imgur(basesite):
 			return temp
 		else:
 			return url
-		

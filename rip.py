@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-import cgitb; cgitb.enable() # for debugging
-import cgi # for getting query keys/values
-
 from sys    import argv
 from os     import remove, path, stat, utime, SEEK_END
 from stat   import ST_ATIME, ST_MTIME
@@ -10,7 +7,7 @@ from time   import strftime
 from urllib import unquote
 from json   import dumps
 
-from sites.site_deviantart  import  deviantart 
+from sites.site_deviantart  import  deviantart
 from sites.site_flickr      import      flickr
 from sites.site_imagearn    import    imagearn
 from sites.site_imagebam    import    imagebam
@@ -18,7 +15,7 @@ from sites.site_imagefap    import    imagefap
 from sites.site_imgur       import       imgur
 from sites.site_instagram   import   instagram
 from sites.site_photobucket import photobucket
-from sites.site_tumblr      import      tumblr
+# from sites.site_tumblr      import      tumblr
 from sites.site_twitter     import     twitter
 from sites.site_xhamster    import    xhamster
 from sites.site_getgonewild import getgonewild
@@ -49,7 +46,7 @@ def main():
 	keys = get_keys()
 	if  'start' in keys and \
 			'url'   in keys:
-		
+
 		cached = True # Default to cached
 		if 'cached' in keys and keys['cached'] == 'false':
 			cached = False
@@ -57,23 +54,23 @@ def main():
 		if 'urls_only' in keys and keys['urls_only'] == 'true':
 			urls_only = True
 		rip(keys['url'], cached, urls_only)
-		
+
 	elif 'check' in keys and \
 			 'url'   in keys:
 		urls_only = False
 		if 'urls_only' in keys and keys['urls_only'] == 'true':
 			urls_only = True
 		check(keys['url'], urls_only)
-		
+
 	elif 'recent' in keys:
 		lines = 10
 		if 'lines' in keys:
 			lines = int(keys['lines'])
 		recent(lines)
-	
+
 	else:
 		print_error('invalid request')
-		
+
 """ Gets ripper, checks for existing rip, rips and zips as needed. """
 def rip(url, cached, urls_only):
 	url = unquote(url).replace(' ', '%20')
@@ -102,29 +99,29 @@ def rip(url, cached, urls_only):
 	if ripper.is_downloading():
 		print_error("album rip is in progress. check back later")
 		return
-	
+
 	# Rip it
 	try:
 		ripper.download()
 	except Exception, e:
 		print_error('download failed: %s' % str(e))
 		return
-	
+
 	# If ripper fails silently, it will remove the directory of images
 	if not path.exists(ripper.working_dir):
 		print_error('unable to download album (empty? 404?)')
 		return
-	
+
 	# Zip it
 	try:
 		ripper.zip()
 	except Exception, e:
 		print_error('zip failed: %s' % str(e))
 		return
-	
+
 	# Add to recently-downloaded list
 	add_recent(url)
-	
+
 	# Print it
 	response = {}
 	response['zip']         = ripper.existing_zip_path()
@@ -156,7 +153,7 @@ def check(url, urls_only):
 	else:
 		# Print last log line ("status")
 		lines = ripper.get_log(tail_lines=1)
-		print dumps( { 
+		print dumps( {
 			'log' : '\\n'.join(lines)
 			} )
 
@@ -171,7 +168,7 @@ def get_ripper(url, urls_only):
 			imgur,       \
 			instagram,   \
 			photobucket, \
-			tumblr,      \
+			# tumblr,      \
 			twitter,     \
 			xhamster,    \
 			getgonewild, \
@@ -207,13 +204,9 @@ def update_file_modified(f):
 
 """ Retrieves key/value pairs from query, puts in dict """
 def get_keys():
-	form = cgi.FieldStorage()
 	keys = {}
-	for key in form.keys():
-		keys[key] = form[key].value
-	if not 'url' in keys and len(argv) > 1:
-		keys['url'] = argv[1]
-		keys['start'] = 'true'
+	keys['url'] = argv[1]
+	keys['start'] = 'true'
 	return keys
 
 """
@@ -226,8 +219,8 @@ def recent(lines):
 		recents = tail(f, lines=lines)
 		f.close()
 	except:  pass
-	
-	print dumps( { 
+
+	print dumps( {
 		'recent' : recents
 		} )
 
@@ -258,7 +251,7 @@ def add_recent(url):
 		if url in tail(f, lines=10): already_added = True
 		f.close()
 		if already_added: return
-	
+
 	f = open('recent_rips.lst', 'a')
 	f.write('%s\n' % url)
 	f.close()
@@ -269,4 +262,3 @@ if __name__ == '__main__':
 	print ""
 	main()
 	print "\n"
-

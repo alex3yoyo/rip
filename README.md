@@ -1,24 +1,4 @@
-rarchives' album ripper
-=======================
-
-about
------
-
-download & provide zips for image albums on various websites.
-
-implementation
---------------
-
-[http://rip.rarchives.com/](http://rip.rarchives.com)
-
-extensibility
--------------
-
-rippers for various sites are in the [/sites/](https://github.com/4pr0n/rip/tree/master/sites) subdirectory.
-
-all site rippers extend the [basesite.py](https://github.com/4pr0n/rip/blob/master/sites/basesite.py) super class. this file contains documentation about required overrides and other helper methods.
-
-a simple site ripper example is [site_instagram.py](https://github.com/4pr0n/rip/blob/master/sites/site_instagram.py) which is (currently) less than 50 lines long and uses lots of the helper methods in basesite.
+A version of [4pr0n's](https://github.com/4pr0n/) [rarchives album ripper](https://github.com/4pr0n/rip) designed to be run locally through the terminal. run "./rip.sh "url1" "url2" "url3" ..." to start the ripping. Tumblr is disabled for the moment (use your own API keys if you want to use it).
 
 license
 -------
