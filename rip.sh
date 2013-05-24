@@ -32,5 +32,5 @@ log() {
 }
 
 for i in "$URLS"; do
-    rip "$i"
+    ./rip.py "$i"
 done

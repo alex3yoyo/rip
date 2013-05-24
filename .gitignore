@@ -2,3 +2,5 @@
 *.pyc
 rips
 lists
+recent_rips.lst
+*.orig
