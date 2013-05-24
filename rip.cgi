@@ -30,6 +30,7 @@ from sites.site_five00px    import    five00px
 from sites.site_chickupload import chickupload
 from sites.site_cghub       import       cghub
 from sites.site_teenplanet  import  teenplanet
+from sites.site_chansluts   import   chansluts
 
 """ Print error in JSON format """
 def print_error(text):
@@ -159,41 +160,42 @@ def check(url, urls_only):
 
 # Returns an appropriate ripper for a URL, or throws exception
 def get_ripper(url, urls_only):
-    sites = [        \
-            deviantart,  \
-            flickr,      \
-            imagearn,    \
-            imagebam,    \
-            imagefap,    \
-            imgur,       \
-            instagram,   \
-            photobucket, \
-            # tumblr,      \
-            twitter,     \
-            xhamster,    \
-            getgonewild, \
-            anonib,      \
-            motherless,  \
-            fourchan,    \
-            occ,         \
-            minus,       \
-            gifyo,       \
-            imgsrc,      \
-            five00px,    \
-            chickupload, \
-            cghub,       \
-            teenplanet]
-    for site in sites:
-        try:
-            ripper = site(url, urls_only)
-            return ripper
-        except Exception, e:
-            # Rippers that aren't made for the URL throw blank Exception
-            error = str(e)
-            if error == '': continue
-            # If Exception isn't blank, then it's the right ripper but an error occurred
-            raise e
-    raise Exception('Ripper can not rip given URL')
+	sites = [        \
+			deviantart,  \
+			flickr,      \
+			imagearn,    \
+			imagebam,    \
+			imagefap,    \
+			imgur,       \
+			instagram,   \
+			photobucket, \
+			tumblr,      \
+			twitter,     \
+			xhamster,    \
+			getgonewild, \
+			anonib,      \
+			motherless,  \
+			fourchan,    \
+			occ,         \
+			minus,       \
+			gifyo,       \
+			imgsrc,      \
+			five00px,    \
+			chickupload, \
+			cghub,       \
+			teenplanet,  \
+			chansluts]
+	for site in sites:
+		try:
+			ripper = site(url, urls_only)
+			return ripper
+		except Exception, e:
+			# Rippers that aren't made for the URL throw blank Exception
+			error = str(e)
+			if error == '': continue
+			# If Exception isn't blank, then it's the right ripper but an error occurred
+			raise e
+	raise Exception('Ripper can not rip given URL')
 
 # Updates system 'modified time' for file to current time.
 def update_file_modified(f):
