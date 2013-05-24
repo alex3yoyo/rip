@@ -15,7 +15,7 @@ from sites.site_imagefap    import    imagefap
 from sites.site_imgur       import       imgur
 from sites.site_instagram   import   instagram
 from sites.site_photobucket import photobucket
-# from sites.site_tumblr      import      tumblr
+from sites.site_tumblr      import      tumblr
 from sites.site_twitter     import     twitter
 from sites.site_xhamster    import    xhamster
 from sites.site_getgonewild import getgonewild
@@ -32,14 +32,17 @@ from sites.site_cghub       import       cghub
 from sites.site_teenplanet  import  teenplanet
 from sites.site_chansluts   import   chansluts
 
-""" Print error in JSON format """
+# Print error in JSON format
 def print_error(text):
     print dumps( { 'error' : text } )
 
-"""
-    Where the magic happens.
-    Prints JSON response to query.
-"""
+if len(argv) <= 1:
+    print("\nError: No URL was provided\n")
+    exit()
+
+# Where the magic happens.
+# Prints JSON response to query.
+
 def main():
     # Keys are the query that's passed to the rip script, ex:
     #   ./rip.cgi?url=http://x.com&start=true&cached=false
@@ -132,10 +135,10 @@ def rip(url, cached, urls_only):
         response['limit']     = ripper.max_images
     print dumps(response)
 
-"""
-    Checks status of rip. Returns zip/size if finished, otherwise
-    returns the last log line from the rip.
-"""
+
+# Checks status of rip. Returns zip/size if finished, otherwise
+# returns the last log line from the rip.
+
 def check(url, urls_only):
     url = unquote(url).replace(' ', '%20')
     try:
@@ -224,7 +227,7 @@ def recent(lines):
         'recent' : recents
         } )
 
-""" Tail a file and get X lines from the end """
+# Tail a file and get X lines from the end
 def tail(f, lines=1, _buffer=4098):
     lines_found = []
     block_counter = -1
@@ -243,7 +246,7 @@ def tail(f, lines=1, _buffer=4098):
     result.reverse()
     return result
 
-""" Adds url to list of recently-downloaded albums """
+# Adds url to list of recently-downloaded albums
 def add_recent(url):
     if path.exists('recent_rips.lst'):
         already_added = False
@@ -256,7 +259,7 @@ def add_recent(url):
     f.write('%s\n' % url)
     f.close()
 
-""" Entry point. Print leading/trailing characters, executes main() """
+# Entry point. Print leading/trailing characters, executes main()
 if __name__ == '__main__':
     print "Content-Type: application/json"
     print ""
