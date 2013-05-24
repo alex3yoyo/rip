@@ -14,12 +14,12 @@ else:
 API_KEY = f.read().replace('\n', '').strip()
 f.close()
 
-"""
-	Downloads tumblr albums
-"""
+
+# Downloads tumblr albums
+
 class tumblr(basesite):
-	
-	""" Parse/strip URL to acceptable format """
+
+	# Parse/strip URL to acceptable format
 	def sanitize_url(self, url):
 		if not '.tumblr.com' in url:
 			raise Exception('')
@@ -27,7 +27,7 @@ class tumblr(basesite):
 			raise Exception('Required user.tumblr.com format')
 		return url
 
-	""" Discover directory path based on URL """
+	# Discover directory path based on URL
 	def get_dir(self, url):
 		user = self.get_user(url)
 		if '/tagged/' in url:
@@ -38,14 +38,14 @@ class tumblr(basesite):
 			return 'tumblr_%s_%s' % (user, tag)
 		else:
 			return 'tumblr_%s' % user
-	
-	""" Returns tumblr user from URL """
+
+	# Returns tumblr user from URL
 	def get_user(self, url):
 		url = url.replace('http://', '').replace('https://', '')
 		user = url[:url.find('.')]
 		return user
 
-	""" Returns URL to retrieve content with """
+	# Returns URL to retrieve content with
 	def get_base_url(self, url, media='photo', offset=0):
 		user  = self.get_user(url)
 		turl  = 'http://api.tumblr.com/v2/blog/%s' % user
@@ -59,7 +59,7 @@ class tumblr(basesite):
 			turl += '&tag=%s' % tag
 		return turl
 
-	""" Parses media content from tumblr's JSON output """
+	# Parses media content from tumblr's JSON output
 	def parse_tumblr(self, r, index, total, media_type):
 		chunks = self.web.between(r, '"blog_name":', '}]}')
 		if len(chunks) == 0: return 0
@@ -86,14 +86,14 @@ class tumblr(basesite):
 				else:
 					self.download_image(content, index, total=total)
 		return index
-	
-	""" Returns total # of posts given a JSON response """
+
+	# Returns total # of posts given a JSON response
 	def get_total(self, text):
 		totals = self.web.between(text, '"total_posts":', '}')
 		if len(totals) > 0: return int(totals[0])
 		return 0
 
-	""" Mystery! """
+	# Mystery!
 	def download(self):
 		self.init_dir()
 		index = 0
@@ -110,4 +110,4 @@ class tumblr(basesite):
 				sleep(2)
 			if self.hit_image_limit(): break
 		self.wait_for_threads()
-	
+

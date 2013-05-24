@@ -132,7 +132,7 @@ def rip(url, cached, urls_only):
     response['size']        = ripper.get_size(ripper.existing_zip_path())
     response['image_count'] = ripper.image_count
     if ripper.hit_image_limit():
-        response['limit']     = ripper.max_images
+        response['limit']   = ripper.max_images
     print dumps(response)
 
 

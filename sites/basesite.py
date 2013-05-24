@@ -11,28 +11,28 @@ from shutil    import rmtree
 LOG_NAME      = 'log.txt'
 RIP_DIRECTORY = 'rips' # Directory to store rips in
 MAX_THREADS   = 3
-MAX_IMAGES    = 1000
+MAX_IMAGES    = 1500
 
-"""
-    Abstract Python 'interface' for a site ripper.
-    Each inerhiting/implementing class *must* override:
-     * sanitize_url
-       -- Must raise Exception if given URL is not valid
-     * get_dir
-       -- Must return directory name to download album to
-         -- Usually this is based on the URL/gallery/album name
-         -- Should be unique for every album on site
-     * download
-       -- Retrieves content from URL, downloads albums
-       -- Does not complete until entire album is downloaded
-"""
+
+    # Abstract Python 'interface' for a site ripper.
+    # Each inerhiting/implementing class *must* override:
+    #  * sanitize_url
+    #    -- Must raise Exception if given URL is not valid
+    #  * get_dir
+    #    -- Must return directory name to download album to
+    #      -- Usually this is based on the URL/gallery/album name
+    #      -- Should be unique for every album on site
+    #  * download
+    #    -- Retrieves content from URL, downloads albums
+    #    -- Does not complete until entire album is downloaded
+
 class basesite(object):
-    """
-        Constructs object using overriding methods.
-        Throws Exception if:
-         * URL is invalid (not appropriate for site class),
-         * Working directory could not be created.
-    """
+
+        # Constructs object using overriding methods.
+        # Throws Exception if:
+        #  * URL is invalid (not appropriate for site class),
+        #  * Working directory could not be created.
+
     def __init__(self, url, urls_only=False):
         self.web = Web() # Web object for downloading/parsing
         self.base_dir = RIP_DIRECTORY
@@ -48,34 +48,34 @@ class basesite(object):
         self.logfile      = '%s%s%s' % (self.working_dir, os.sep, LOG_NAME)
         self.first_log    = True
         self.urls_only    = urls_only
-    
-    """ To be overridden """
+
+    # To be overridden
     def sanitize_url(self, url):
         raise Exception("Method 'sanitize_url' was not overridden!")
 
-    """ Return directory name to store photos in """
+    # Return directory name to store photos in
     def get_dir(self, url):
         raise Exception("Method 'get_dir' was not overridden!")
-    
-    """ Creates working dir if zip does not exist """
+
+    # Creates working dir if zip does not exist
     def init_dir(self):
         if not os.path.exists(self.working_dir) and \
                self.existing_zip_path() == None:
             os.mkdir(self.working_dir)
-    
-    """ Returns true if we hit the image limit, false otherwise """
+
+    # Returns true if we hit the image limit, false otherwise
     def hit_image_limit(self):
         return self.image_count >= self.max_images
-    
-    """ To be overridden """
+
+    # To be overridden
     def download(self):
         raise Exception("Method 'download' was not overridden!")
 
-    """ Checks if album is already being downloaded """
+    # Checks if album is already being downloaded
     def is_downloading(self):
         return os.path.exists(self.logfile)
-    
-    """ Appends line to log file """
+
+    # Appends line to log file
     def log(self, text, overwrite=False):
         if self.first_log:
             self.first_log = False
@@ -89,8 +89,8 @@ class basesite(object):
         f.write("%s\n" % text)
         f.flush()
         f.close()
-    
-    """ Gets last line(s) from log """
+
+    # Gets last line(s) from log
     def get_log(self, tail_lines=1):
         if not os.path.exists(self.logfile):
             return ''
@@ -100,8 +100,8 @@ class basesite(object):
         while r.endswith('\n'): r = r[:-1]
         lines = r.split('\n')
         return lines[len(lines)-tail_lines:]
-    
-    """ Starts separate thread to download image from URL """
+
+    # Starts separate thread to download image from URL
     def download_image(self, url, index, total='?', subdir='', saveas=None):
         if saveas == None:
             saveas = url[url.rfind('/')+1:]
@@ -120,7 +120,7 @@ class basesite(object):
         if subdir != '': subdir = '/%s' % subdir
         savedir = '%s%s' % (self.working_dir, subdir)
         if not os.path.exists(savedir): os.mkdir(savedir)
-        
+
         saveas = '%s/%03d_%s' % (savedir, index, saveas)
         if os.path.exists(saveas):
             self.log('file exists: %s' % saveas)
@@ -132,8 +132,8 @@ class basesite(object):
             args = (url, saveas, index, total)
             t = Thread(target=self.download_image_thread, args=args)
             t.start()
-    
-    """ Multi-threaded download of image """
+
+    # Multi-threaded download of image
     def download_image_thread(self, url, saveas, index, total):
         m = self.web.get_meta(url)
         if 'Content-Type' not in m:
@@ -154,7 +154,7 @@ class basesite(object):
                 text += ') - %s' % url
         self.log(text)
         self.thread_count -= 1
-    
+
     def wait_for_threads(self):
         while self.thread_count > 0:
             time.sleep(0.1)
@@ -162,8 +162,8 @@ class basesite(object):
             if not self.urls_only and len(os.listdir(self.working_dir)) <= 1 \
                     or self.urls_only and len(os.listdir(self.working_dir)) == 0:
                 rmtree(self.working_dir) # Delete everything in working dir
-    
-    """ Returns human-readable filesize for file """
+
+    # Returns human-readable filesize for file
     def get_size(self, filename):
         try:
             bytes = os.path.getsize(filename)
@@ -177,8 +177,8 @@ class basesite(object):
             b /= 1024
         return '0b'
 
-    
-    """ Returns path to zip file if it exists, otherwise None. """
+
+    # Returns path to zip file if it exists, otherwise None.
     def existing_zip_path(self):
         extension = 'zip'
         if self.urls_only:
@@ -188,12 +188,11 @@ class basesite(object):
             return zipfile
         else:
             return None
-    
-    """ 
-        Zips site's working directory,
-        Deletes zipped files after zip is created
-        Returns path to zip file
-    """
+
+        # Zips site's working directory,
+        # Deletes zipped files after zip is created
+        # Returns path to zip file
+
     def zip(self):
         if self.urls_only:
             if not os.path.exists('%s/log.txt' % self.working_dir):
@@ -230,7 +229,7 @@ class basesite(object):
         z.close()
         rmtree(self.working_dir) # Delete everything in working dir
         return zip_filename
-        
+
     def add_url(self, index, url, total=0):
         self.image_count += 1
         string = '(%d' % index
