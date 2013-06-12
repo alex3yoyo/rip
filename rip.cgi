@@ -1,36 +1,37 @@
 #!/usr/bin/python
 
-from sys    import argv
-from os     import remove, path, stat, utime, SEEK_END
-from stat   import ST_ATIME, ST_MTIME
-from time   import strftime
-from urllib import unquote
-from json   import dumps
+from sys        import argv
+from os         import remove, path, stat, utime, SEEK_END
+from stat       import ST_ATIME, ST_MTIME
+from time       import strftime
+from urllib     import unquote
+from json       import dumps
+# import argparse
 
-from sites.site_deviantart  import  deviantart
-from sites.site_flickr      import      flickr
-from sites.site_imagearn    import    imagearn
-from sites.site_imagebam    import    imagebam
-from sites.site_imagefap    import    imagefap
-from sites.site_imgur       import       imgur
-from sites.site_instagram   import   instagram
+from sites.site_deviantart  import deviantart
+from sites.site_flickr      import flickr
+from sites.site_imagearn    import imagearn
+from sites.site_imagebam    import imagebam
+from sites.site_imagefap    import imagefap
+from sites.site_imgur       import imgur
+from sites.site_instagram   import instagram
 from sites.site_photobucket import photobucket
-from sites.site_tumblr      import      tumblr
-from sites.site_twitter     import     twitter
-from sites.site_xhamster    import    xhamster
+# from sites.site_tumblr      import tumblr
+from sites.site_twitter     import twitter
+from sites.site_xhamster    import xhamster
 from sites.site_getgonewild import getgonewild
-from sites.site_anonib      import      anonib
-from sites.site_motherless  import  motherless
-from sites.site_4chan       import    fourchan
-from sites.site_occ         import         occ
-from sites.site_minus       import       minus
-from sites.site_gifyo       import       gifyo
-from sites.site_imgsrc      import      imgsrc
-from sites.site_five00px    import    five00px
+from sites.site_anonib      import anonib
+from sites.site_motherless  import motherless
+from sites.site_4chan       import fourchan
+from sites.site_occ         import occ
+from sites.site_minus       import minus
+from sites.site_gifyo       import gifyo
+from sites.site_imgsrc      import imgsrc
+from sites.site_five00px    import five00px
 from sites.site_chickupload import chickupload
-from sites.site_cghub       import       cghub
-from sites.site_teenplanet  import  teenplanet
-from sites.site_chansluts   import   chansluts
+from sites.site_cghub       import cghub
+from sites.site_teenplanet  import teenplanet
+from sites.site_chansluts   import chansluts
 
 # Print error in JSON format
 def print_error(text):
@@ -49,14 +50,17 @@ def main():
     # The dict would be { url : http://x.com, start: true, cached: false }
     keys = get_keys()
     if  'start' in keys and \
-        'url'   in keys:
+        'url'   in keys and \
+        'cached' in keys and \
+        'urls_only' in keys:
 
         cached = True # Default to cached
         if 'cached' in keys and keys['cached'] == 'false':
             cached = False
-        urls_only = False
+        urls_only = False # Default to false
         if 'urls_only' in keys and keys['urls_only'] == 'true':
             urls_only = True
+
         rip(keys['url'], cached, urls_only)
 
     elif 'check' in keys and \
@@ -172,7 +176,7 @@ def get_ripper(url, urls_only):
 			imgur,       \
 			instagram,   \
 			photobucket, \
-			tumblr,      \
+			# tumblr,      \
 			twitter,     \
 			xhamster,    \
 			getgonewild, \
@@ -209,9 +213,11 @@ def update_file_modified(f):
 
 # Retrieves key/value pairs from query, puts in dict """
 def get_keys():
-    keys = {}
-    keys['url'] = argv[1]
-    keys['start'] = 'true'
+    keys              = {}
+    keys['start']     = 'true'
+    keys['url']       = argv[1]
+    keys['cached']    = argv[2]
+    keys['urls_only'] = argv[3]
     return keys
 
 # Returns recently-downloaded zips

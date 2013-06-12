@@ -4,3 +4,7 @@ rips
 lists
 recent_rips.lst
 *.orig
+private_users.txt
+moreusers.txt
+users.txt
+instagram.log
