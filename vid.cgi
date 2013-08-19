@@ -31,34 +31,86 @@ def get_video_url(siteurl):
 def get_url(siteurl):
 	is_supported(siteurl)
 	sites = {
-			'xvideos.com/'  : { 'begend' : ['url=',   '&amp;'], 'unquote' : 1 },
-			'videobam.com/' : { 'begend' : ['"',      '"'],     'unquote' : 1 },
-			'xhamster.com/' : { 'begend' : ['"',      '"'],     'unquote' : 1 },
-			'videarn.com/'  : { 'begend' : ["src='",  "'"],     'unquote' : 1 },
-			'beeg.com/'     : { 'begend' : ['"',      '"'],     'unquote' : 1 },
-			'drtuber.com/'  : { 'begend' : ['url%3D', '"'],     'unquote' : 1 },
-			'youporn.com/'  : { 'begend' : ['href="', '&amp;'], 'unquote' : 1 }
+			'xvideos.com/'  :  { 'begend' : ['url=',   '&amp;'],    'unquote' : 1 },
+			'videobam.com/' :  { 'begend' : ['"',      '"'],        'unquote' : 1 },
+			'xhamster.com/' :  { 'begend' : ['"',      '"'],        'unquote' : 1 },
+			'videarn.com/'  :  { 'begend' : ["src='",  "'"],        'unquote' : 1 },
+			'beeg.com/'     :  { 'begend' : ['"',      '"'],        'unquote' : 1 },
+			'drtuber.com/'  :  { 'begend' : ['url%3D', '"'],        'unquote' : 1 },
+			'youporn.com/'  :  { 'begend' : ['href="', '&amp;'],    'unquote' : 1 },
+			'redtube.com/'  :  { 'begend' : ['&flv_url=', '&'],     'unquote' : 1 },
+			'motherless.com/': { 'begend' : ["__fileurl = '", '"'], 'unquote' : 1 },
+			'vine.co/'      :  { 'begend' : ['source src="', '"'],  'unquote' : 1 },
 		}
-	supported = False
-	for key in sites.keys():
-		if key in siteurl:
-			supported = True
-	if not supported:
-		raise Exception('site not supported, <a href="http://www.reddit.com/message/compose/?to=4_pr0n&subject=rip.rarchives.com&message=Support%20this%20site:%20enter_site_here.com">ask 4_pr0n to support it</a>')
-	source = web.getter(siteurl)
-	ext_inds = get_extension_indexes(source)
-	index = get_deepest_ind(source, ext_inds)
+	if 'fapmenow.com/' in siteurl:
+		return get_site_fapmenow(siteurl)
+	if 'vimeo.com/' in siteurl:
+		return get_site_vimeo(siteurl)
+	if 'tumblr.com/' in siteurl:
+		return get_site_tumblr(siteurl)
+	if '4tube.com/' in siteurl:
+		return get_site_4tube(siteurl)
+	if 'xtube.com' in siteurl:
+		return get_site_xtube(siteurl)
 	site_key = None
 	for key in sites.keys():
 		if key in siteurl:
+			supported = True
 			site_key = key
-			url = between(source, index, sites[key]['begend'][0], sites[key]['begend'][1])
-			break
+	if site_key == None:
+		raise Exception('site not supported, <a href="http://www.reddit.com/message/compose/?to=4_pr0n&subject=rip.rarchives.com&message=Support%%20this%%20video%%20site:%%20`%s`">ask 4_pr0n to support it</a>' % siteurl)
+	source = web.getter(siteurl)
+	ext_inds = get_extension_indexes(source)
+	index = get_deepest_ind(source, ext_inds)
+	url = between(source, index, sites[key]['begend'][0], sites[key]['begend'][1])
 	url = url.replace('\\/', '/')
 	while sites[site_key]['unquote'] > 0 and '%' in url:
 		sites[site_key]['unquote'] -= 1
 		url = unquote(url)
 	return url
+
+def get_site_fapmenow(siteurl):
+	r = web.getter(siteurl)
+	if not '"video_src" href="' in r:
+		raise Exception('could not find video_src at %s' % siteurl)
+	return web.between(r, '"video_src" href="', '"')[0]
+
+def get_site_vimeo(siteurl):
+	r = web.getter(siteurl)
+	if not "window.addEvent('domready'" in r:
+		raise Exception('could not find domready at %s' % siteurl)
+	chunk = web.between(r, "window.addEvent('domready'", 'window.addEvent(')[0]
+	ts  = web.between(chunk, '"timestamp":',   ',')[0]
+	sig = web.between(chunk, '"signature":"',  '"')[0]
+	vid = web.between(chunk, '"video":{"id":', ',')[0]
+	url  = 'http://player.vimeo.com/play_redirect'
+	url += '?clip_id=%s' % vid
+	url += '&sig=%s' % sig
+	url += '&time=%s' % ts
+	url += '&quality=hd&codecs=H264,VP8,VP6&type=moogaloop_local&embed_location=&seek=0'
+	return url
+
+def get_site_tumblr(siteurl):
+	r = web.getter(siteurl)
+	if not 'source src=\\x22' in r:
+		raise Exception('could not find source src at %s' % siteurl)
+	url = web.between(r, 'source src=\\x22', '\\x22')[0]
+	return url
+
+def get_site_4tube(siteurl):
+	r = web.getter(siteurl)
+	if "playerFallbackFile = '" in r:
+		return unquote(web.between(r, "playerFallbackFile = '", "'")[0])
+	elif 'sources: [{"file":"' in r:
+		return web.between(r, 'sources: [{"file":"', '"')[0].replace('\\/', '/')
+	else:
+		raise Exception('could not find sources-file or playerFallbackFile at %s' % siteurl)
+
+def get_site_xtube(siteurl):
+	r = web.getter(siteurl)
+	if 'videoMp4 = "' in r:
+		return web.between(r, 'videoMp4 = "', '"')[0].replace('\\/', '/')
+	raise Exception('could not find videoMp4 at %s' % siteurl)
 
 def is_supported(url):
 	for not_supported in ['pornhub.com/', 'youtube.com/', 'dailymotion.com/']:

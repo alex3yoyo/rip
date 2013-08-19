@@ -37,9 +37,14 @@ from sites.site_imgbox      import      imgbox
 from sites.site_reddit      import      reddit
 from sites.site_gallerydump import gallerydump
 from sites.site_fapdu       import       fapdu
+from sites.site_fuskator    import    fuskator
+from sites.site_kodiefiles  import  kodiefiles
+from sites.site_pbase       import       pbase
 # No longer supported
 from sites.site_occ         import         occ
 from sites.site_gonearch    import    gonearch
+
+blacklisted_urls = ['butttoucher.com/users/Crimson_in_Red', 'reddit.com/user/crimson_in_red']
 
 """ Print error in JSON format """
 def print_error(text):
@@ -90,6 +95,11 @@ def main():
 # Gets ripper, checks for existing rip, rips and zips as needed.
 def rip(url, cached, urls_only):
 	url = unquote(url).replace(' ', '%20')
+	# Check blacklist
+	for blacklisted_url in blacklisted_urls:
+		if blacklisted_url.lower() in url.lower():
+			print_error("specific URL not supported")
+			return
 	try:
 		# Get domain-specific ripper for URL
 		ripper = get_ripper(url, urls_only)
@@ -205,7 +215,10 @@ def get_ripper(url, urls_only):
 			imgbox,      \
 			reddit,      \
 			gallerydump, \
-			fapdu]
+			fapdu,       \
+			fuskator,    \
+			kodiefiles,  \
+			pbase]
 	for site in sites:
 		try:
 			ripper = site(url, urls_only)
