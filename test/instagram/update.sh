@@ -37,9 +37,9 @@ for i in $USERS; do
 
         # Get URLs of all images for the user
         echo "Checking for new photos from ${i}"
-        URL="http://web.stagram.com/n/${i}/"
-        (../../rip.cgi "${URL}" "false" "true")
-        wait
+        # URL="http://web.stagram.com/n/${i}/"
+        python ../../rip.cgi "http://web.stagram.com/n/${i}/" "false" "true"
+        # python ../../rip.cgi "http://statigr.am/${i}/" "false" "true"
 
         mv "rips/instagram_${i}.txt" "lists/${i}.new.txt"
         mv "lists/${i}.txt" "lists/${i}.old.txt"
@@ -47,29 +47,48 @@ for i in $USERS; do
         comm -13 <(sort lists/${i}.old.txt) <(sort lists/${i}.new.txt) > "lists/${i}.geturls.txt"
 
         # Download new images
-        echo "Downloading new photos for ${i}"
+        echo "Calculate number of photos to download for ${i}"
         cd "rips/${i}"
         # Calculate number of images to download
-        total=1
+        TOTAL=0
         for k in $(<../../lists/${i}.geturls.txt); do
-            total=$(($total+1))
+            TOTAL=$(($TOTAL+1))
         done
         # Download
-        counting=1
-        for k in $(<../../lists/${i}.geturls.txt); do
-            echo "Getting ${counting}/${total}"
-            wget --no-clobber --no-verbose --tries=25 --waitretry=1 "${k}"
-            echo "Got ${counting}"
-            counting=$(($counting+1))
-        done
-        wait
-        echo "Renaming files"
-        sort_file_date
+        if [[ "${TOTAL}" -gt 0 ]]; then
+            echo "Getting ${TOTAL} for user ${i}"
+            echo ""
+            COUNTING=0
+            for k in $(<../../lists/${i}.geturls.txt); do
+                COUNTING=$(($COUNTING+1))
+                echo -en "\r\033[K${COUNTING}/${TOTAL}"
+                wget --no-clobber --quiet --tries=10 --waitretry=1 "${k}"
+            done
+            echo ""
+            echo "Renaming files"
+            sort_file_date
+        else
+            echo "No new photos to download"
+        fi
+
+        # COUNTING=0
+        # for k in $(<../../lists/${i}.geturls.txt); do
+        #     COUNTING=$(($COUNTING+1))
+        #     echo "Getting ${COUNTING}/${TOTAL}"
+        #     wget --no-clobber --no-verbose --tries=10 --waitretry=1 "${k}"
+        #     echo "Got ${COUNTING}/${TOTAL}"
+        # done
+        # wait
+        # echo "Renaming files"
+        # sort_file_date
+
         cd ../../
 
         touch "lists/${i}.txt"
         cat "lists/${i}.geturls.txt" "lists/${i}.old.txt" > "lists/${i}.txt"
         rm "lists/${i}.new.txt" "lists/${i}.old.txt" "lists/${i}.geturls.txt"
+
+        unset COUNTING TOTAL
 done
 
 rm "recent_rips.lst"
