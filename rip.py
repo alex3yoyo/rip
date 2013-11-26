@@ -4,7 +4,6 @@ from sys import argv, exit
 import os
 import platform
 
-from sites.site_deviantart  import  deviantart 
 from sites.site_flickr      import      flickr
 from sites.site_imagearn    import    imagearn
 from sites.site_imagebam    import    imagebam
@@ -28,23 +27,16 @@ from sites.site_teenplanet  import  teenplanet
 from sites.site_chansluts   import   chansluts
 from sites.site_buttoucher  import  buttoucher
 from sites.site_pichunter   import   pichunter
-from sites.site_soupio      import      soupio
 from sites.site_imgbox      import      imgbox
 from sites.site_reddit      import      reddit
 from sites.site_gallerydump import gallerydump
 from sites.site_fapdu       import       fapdu
-from sites.site_fuskator    import    fuskator
-from sites.site_kodiefiles  import  kodiefiles
-from sites.site_pbase       import       pbase
-from sites.site_8muses      import  eightmuses
-from sites.site_setsdb      import      setsdb
 from sites.site_nfsfw       import       nfsfw
 # No longer supported
 from sites.site_occ         import         occ
 from sites.site_gonearch    import    gonearch
 
 sites = [        \
-		deviantart,  \
 		flickr,      \
 		imagearn,    \
 		imagebam,    \
@@ -68,16 +60,10 @@ sites = [        \
 		chansluts,   \
 		buttoucher,  \
 		pichunter,   \
-		soupio,      \
 		imgbox,      \
 		reddit,      \
 		gallerydump, \
 		fapdu,       \
-		fuskator,    \
-		kodiefiles,  \
-		pbase,       \
-		eightmuses,  \
-		setsdb,      \
 		nfsfw]
 
 def main():
