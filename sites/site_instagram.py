@@ -9,7 +9,7 @@ from os   import path
 	Downloads instagram albums
 """
 class instagram(basesite):
-	
+	# gets
 	""" Retrieves API key from local file """
 	def get_api_key(self):
 		api_path = path.join(path.dirname(__file__), 'instagram_api.key')
