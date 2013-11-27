@@ -37,9 +37,8 @@ for i in $USERS; do
 
         # Get URLs of all images for the user
         echo "Checking for new photos from ${i}"
-        # URL="http://web.stagram.com/n/${i}/"
-        python ../../rip.cgi "http://web.stagram.com/n/${i}/" "false" "true"
-        # python ../../rip.cgi "http://statigr.am/${i}/" "false" "true"
+        URL="http://web.stagram.com/n/${i}/"
+        python ../../rip.cgi "${URL}"
 
         mv "rips/instagram_${i}.txt" "lists/${i}.new.txt"
         mv "lists/${i}.txt" "lists/${i}.old.txt"
@@ -47,7 +46,7 @@ for i in $USERS; do
         comm -13 <(sort lists/${i}.old.txt) <(sort lists/${i}.new.txt) > "lists/${i}.geturls.txt"
 
         # Download new images
-        echo "Calculate number of photos to download for ${i}"
+        # echo "Calculating number of photos to download for ${i}"
         cd "rips/${i}"
         # Calculate number of images to download
         TOTAL=0
@@ -71,16 +70,7 @@ for i in $USERS; do
             echo "No new photos to download"
         fi
 
-        # COUNTING=0
-        # for k in $(<../../lists/${i}.geturls.txt); do
-        #     COUNTING=$(($COUNTING+1))
-        #     echo "Getting ${COUNTING}/${TOTAL}"
-        #     wget --no-clobber --no-verbose --tries=10 --waitretry=1 "${k}"
-        #     echo "Got ${COUNTING}/${TOTAL}"
-        # done
-        # wait
-        # echo "Renaming files"
-        # sort_file_date
+        echo ""
 
         cd ../../
 
@@ -90,7 +80,5 @@ for i in $USERS; do
 
         unset COUNTING TOTAL
 done
-
-rm "recent_rips.lst"
 
 exit

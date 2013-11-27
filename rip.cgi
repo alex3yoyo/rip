@@ -6,22 +6,12 @@ from stat       import ST_ATIME, ST_MTIME
 from time       import strftime
 from urllib     import unquote
 from json       import dumps
-# import argparse
 
-from sites.site_imgur       import imgur
 from sites.site_webstagram  import instagram
-from sites.site_photobucket import photobucket
-# from sites.site_tumblr      import tumblr
-from sites.site_twitter     import twitter
-from sites.site_getgonewild import getgonewild
-from sites.site_motherless  import  motherless
-from sites.site_minus       import       minus
-from sites.site_chickupload import chickupload
-from sites.site_teenplanet  import  teenplanet
-from sites.site_buttoucher  import  buttoucher
-from sites.site_reddit      import      reddit
-
-blacklisted_urls = ['butttoucher.com/users/Crimson_in_Red', 'reddit.com/user/crimson_in_red']
+# from sites.site_imgur		import imgur
+# from sites.site_twitter     import twitter
+# from sites.site_getgonewild import getgonewild
+# from sites.site_reddit      import reddit
 
 """ Print error in JSON format """
 def print_error(text):
@@ -35,70 +25,21 @@ if len(argv) <= 1:
 # Prints JSON response to query.
 
 def main():
-    # Keys are the query that's passed to the rip script, ex:
-    #   ./rip.cgi?url=http://x.com&start=true&cached=false
-    # The dict would be { url : http://x.com, start: true, cached: false }
-    keys = get_keys()
-    if  'start' in keys and \
-        'url'   in keys and \
-        'cached' in keys and \
-        'urls_only' in keys:
-
-        cached = True # Default to cached
-        if 'cached' in keys and keys['cached'] == 'false':
-            cached = False
-        urls_only = False # Default to false
-        if 'urls_only' in keys and keys['urls_only'] == 'true':
-            urls_only = True
-
-        rip(keys['url'], cached, urls_only)
-
-    elif 'check' in keys and \
-        'url'   in keys:
-        urls_only = False
-        if 'urls_only' in keys and keys['urls_only'] == 'true':
-            urls_only = True
-        check(keys['url'], urls_only)
-
-    elif 'recent' in keys:
-        lines = 10
-        if 'lines' in keys:
-            lines = int(keys['lines'])
-        recent(lines)
-
+    if argv[1]:
+    	rip(argv[1])
     else:
-        print_error('invalid request')
+        print_error('invalid request (no url)')
 
 # Gets ripper, checks for existing rip, rips and zips as needed.
-def rip(url, cached, urls_only):
+def rip(url):
 	url = unquote(url.strip()).replace(' ', '%20')
-	
-	# Check blacklist
-	for blacklisted_url in blacklisted_urls:
-		if blacklisted_url.lower() in url.lower():
-			print_error("specific URL not supported")
-			return
+
 	try:
 		# Get domain-specific ripper for URL
-		ripper = get_ripper(url, urls_only)
+		ripper = get_ripper(url)
 	except Exception, e:
 		print_error(str(e))
 		return
-
-	# Check if there's already a zip for the album
-	if ripper.existing_zip_path() != None:
-		# If user specified the uncached version, remove the zip
-		if not cached:
-			remove(ripper.existing_zip_path())
-		else:
-			# Mark the file as recently-accessed (top of FIFO queue)
-			update_file_modified(ripper.existing_zip_path())
-			#add_recent(url)
-			print dumps( {
-				'zip'  : ripper.existing_zip_path(),
-				'size' : ripper.get_size(ripper.existing_zip_path())
-				} )
-			return
 
 	if ripper.is_downloading():
 		print_error("album rip is in progress. check back later")
@@ -124,62 +65,28 @@ def rip(url, cached, urls_only):
 		print_error('zip failed: %s' % str(e))
 		return
 	
-	# Add to recently-downloaded list
-	add_recent(url)
-	
 	# Print it
 	response = {}
 	response['zip']         = ripper.existing_zip_path()
 	response['size']        = ripper.get_size(ripper.existing_zip_path())
 	response['image_count'] = ripper.image_count
 	if ripper.hit_image_limit():
-		response['limit']     = ripper.max_images
+		response['limit'] = ripper.max_images
 	print dumps(response)
 
-"""
-	Checks status of rip. Returns zip/size if finished, otherwise
-	returns the last log line from the rip.
-"""
-def check(url, urls_only):
-	url = unquote(url).replace(' ', '%20')
-	try:
-		ripper = get_ripper(url, urls_only)
-	except Exception, e:
-		print_error(str(e))
-		return
-
-	# Check if there's already a zip for the album
-	if ripper.existing_zip_path() != None:
-		# Return link to zip
-		print dumps( {
-			'zip'  : ripper.existing_zip_path(),
-			'size' : ripper.get_size(ripper.existing_zip_path())
-			} )
-	else:
-		# Print last log line ("status")
-		lines = ripper.get_log(tail_lines=1)
-		print dumps( { 
-			'log' : '\\n'.join(lines)
-			} )
-
 """ Returns an appropriate ripper for a URL, or throws exception """
-def get_ripper(url, urls_only):
+def get_ripper(url):
 	sites = [        \
-			imgur,       \
-			instagram,   \
-			photobucket, \
+			instagram]
+			# imgur,       \
 			# tumblr,      \
-			twitter,     \
-			getgonewild, \
-			motherless,  \
-			minus,       \
-			chickupload, \
-			teenplanet,  \
-			buttoucher,  \
-			reddit]
+			# twitter,     \
+			# getgonewild, \
+			# reddit]
+	
 	for site in sites:
 		try:
-			ripper = site(url, urls_only)
+			ripper = site(url, True)
 			return ripper
 		except Exception, e:
 			# Rippers that aren't made for the URL throw blank Exception
@@ -191,73 +98,14 @@ def get_ripper(url, urls_only):
 
 """ Updates system 'modified time' for file to current time. """
 def update_file_modified(f):
+	if DEBUG: print(">function \"update_file_modified\" used")
 	st = stat(f)
 	atime = int(strftime('%s'))
 	mtime = int(strftime('%s'))
 	utime(f, (atime, mtime))
 
-""" Retrieves key/value pairs from query, puts in dict """
-def get_keys():
-    keys              = {}
-    keys['start']     = 'true'
-    keys['url']       = argv[1]
-    keys['cached']    = argv[2]
-    keys['urls_only'] = argv[3]
-    return keys
-
-"""
-	Returns recently-downloaded zips
-"""
-def recent(lines):
-	recents = []
-	try:
-		f = open('recent_rips.lst', 'r')
-		recents = tail(f, lines=lines)
-		f.close()
-	except:  pass
-	
-	print dumps( { 
-		'recent' : recents
-		} )
-
-""" Tail a file and get X lines from the end """
-def tail(f, lines=1, _buffer=4098):
-	lines_found = []
-	block_counter = -1
-	while len(lines_found) < lines:
-			try:
-					f.seek(block_counter * _buffer, SEEK_END)
-			except IOError:  # either file is too small, or too many lines requested
-					f.seek(0)
-					lines_found = f.readlines()
-					break
-			lines_found = f.readlines()
-			if len(lines_found) > lines:
-					break
-			block_counter -= 1
-	result = [word.strip() for word in lines_found[-lines:]]
-	result.reverse()
-	return result
-
-""" Adds url to list of recently-downloaded albums """
-def add_recent(url):
-	if '.ru/' in url: return
-	if path.exists('recent_rips.lst'):
-		already_added = False
-		f = open('recent_rips.lst', 'r')
-		if url in tail(f, lines=10): already_added = True
-		f.close()
-		if already_added: return
-	
-	f = open('recent_rips.lst', 'a')
-	f.write('%s\n' % url)
-	f.close()
-
 """ Entry point. Print leading/trailing characters, executes main() """
 if __name__ == '__main__':
-	print "Content-Type: application/json"
-	print "Keep-Alive: timeout=300"
-	print "Connection: Keep-Alive"
 	print ""
 	main()
 	print "\n"

@@ -11,7 +11,7 @@ from shutil    import rmtree
 LOG_NAME      = 'log.txt' 
 RIP_DIRECTORY = 'rips' # Directory to store rips in
 MAX_THREADS   = 3
-MAX_IMAGES    = 1000
+MAX_IMAGES    = 10000
 
 """
 	Abstract Python 'interface' for a site ripper.
@@ -33,8 +33,8 @@ class basesite(object):
 		 * URL is invalid (not appropriate for site class),
 		 * Working directory could not be created.
 	"""
-	def __init__(self, url, urls_only=False, debugging=False):
-		self.debugging = debugging
+	def __init__(self, url, urls_only=True, debugging=False):
+		self.debugging = False
 		self.web = Web(debugging=self.debugging) # Web object for downloading/parsing
 		self.base_dir = RIP_DIRECTORY
 		if not os.path.exists(self.base_dir):
@@ -48,7 +48,7 @@ class basesite(object):
 		self.max_images   = MAX_IMAGES
 		self.logfile      = '%s%s%s' % (self.working_dir, os.sep, LOG_NAME)
 		self.first_log    = True
-		self.urls_only    = urls_only
+		self.urls_only    = True
 	
 	""" To be overridden """
 	def sanitize_url(self, url):
@@ -182,9 +182,7 @@ class basesite(object):
 	
 	""" Returns path to zip file if it exists, otherwise None. """
 	def existing_zip_path(self):
-		extension = 'zip'
-		if self.urls_only:
-			extension = 'txt'
+		extension = 'txt'
 		zipfile = '%s.%s' % (self.working_dir, extension)
 		if os.path.exists(zipfile) and not os.path.exists(self.working_dir):
 			return zipfile
@@ -197,28 +195,28 @@ class basesite(object):
 		Returns path to zip file
 	"""
 	def zip(self):
-		if self.urls_only:
-			if not os.path.exists('%s/log.txt' % self.working_dir):
-				raise Exception('no log found')
-			url_filename = '%s.txt' % self.working_dir
-			f = open('%s/log.txt' % self.working_dir, 'r')
-			lines = f.read().split('\n')[1:]
-			tuples = []
-			for line in lines:
-				if line.strip() == '' or ' - ' not in line: continue
-				if line.count('|') < 1: continue
-				line = line[line.find(' - ')+3:]
-				splits = line.split('|')
-				index  = splits[0]
-				url    = '|'.join(splits[1:])
-				tuples.append( (index, url) )
-			tuples = sorted(tuples, key=lambda tup: int(tup[0]))
-			f = open(url_filename, 'w')
-			for (index, url) in tuples:
-				f.write('%s\n' % url)
-			f.close()
-			rmtree(self.working_dir) # Delete everything in working dir
-			return url_filename
+		if not os.path.exists('%s/log.txt' % self.working_dir):
+			raise Exception('no log found')
+		url_filename = '%s.txt' % self.working_dir
+		f = open('%s/log.txt' % self.working_dir, 'r')
+		lines = f.read().split('\n')[1:]
+		tuples = []
+		for line in lines:
+			if line.strip() == '' or ' - ' not in line: continue
+			if line.count('|') < 1: continue
+			line = line[line.find(' - ')+3:]
+			splits = line.split('|')
+			index  = splits[0]
+			url    = '|'.join(splits[1:])
+			tuples.append( (index, url) )
+		tuples = sorted(tuples, key=lambda tup: int(tup[0]))
+		f = open(url_filename, 'w')
+		for (index, url) in tuples:
+			f.write('%s\n' % url)
+		f.close()
+		rmtree(self.working_dir) # Delete everything in working dir
+		return url_filename
+
 		self.log('zipping album...')
 		zip_filename = '%s.zip' % self.working_dir
 		z = ZipFile(zip_filename, "w", ZIP_DEFLATED)
