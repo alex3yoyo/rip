@@ -1,6 +1,6 @@
 # rip-alex3yoyo
 
-# Description
+## Description
 A version of [4pr0n's](https://github.com/4pr0n/) [rarchives album ripper](https://github.com/4pr0n/rip) that checks for new images from users of various sites (currently only instagram). Designed to be run locally through the terminal.
 
 ## Supported Sites
